@@ -51,16 +51,6 @@ void handle_error(int retval)
 
 int main(int argc, char *argv[])
 {	
-	int events[] = 
-	{
-   		PAPI_TOT_IIS, /*Total instructions issued */
-	   	PAPI_TOT_CYC, /*Total cycles */
-   		PAPI_L1_DCH,  /*L1 D Cache Hit */
-   		PAPI_L1_ICH,  /*L1 instruction cache hits */
-   		PAPI_L1_ICA,  /*L1 instruction cache accesses */
-   		PAPI_RES_STL  /*Resource stall */
-   	};
-
 	int retval;
 	/* Initialize the library */
 	retval = PAPI_library_init(PAPI_VER_CURRENT);
@@ -140,7 +130,7 @@ int main(int argc, char *argv[])
 		else if (retCreate != PAPI_OK)
 			printf("Error creating EventSet\n");
         
-     		i=events[atoi(argv[4])];   
+     		i=atoi(argv[4]);
 	 	
 	  	retval = PAPI_get_event_info(i, &info);
 	  	
