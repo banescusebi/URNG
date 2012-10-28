@@ -15,4 +15,6 @@ CFLAGS=-fopenmp -g -I${C_INCLUDE_PATH}
 LDLIBS=${LIBRARY_PATH}/libpapi.a
 
 # Compilation target
-urng: urng.c 
+urng-openmp: urng-openmp.c 
+
+urng-pthreads: urng-pthreads.c

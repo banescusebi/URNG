@@ -1,4 +1,5 @@
 /* Unpredictable Random Number Generator (URNG)
+ * implemented using OpenMP and PAPI
  * Copyright (c) 2012, Sebastian Banescu
  * All rights reserved.
  * 
@@ -57,7 +58,7 @@ int main(int argc, char *argv[])
 	
 	if (retval != PAPI_VER_CURRENT && retval > 0) 
 	{
-		fprintf(stderr,"PAPI library version mismatch!\en");
+		fprintf(stderr,"PAPI library version mismatch!\n");
 		exit(1); 
 	}
 	
@@ -92,7 +93,6 @@ int main(int argc, char *argv[])
 	unsigned char bytexor;
 	char *filename;
 	char thId[2];
-	FILE *fd;
 	unsigned char ***byte = malloc(sizeof(unsigned char**)*NO_OF_EVENTS); 
 	char ***filen = malloc(sizeof(char**)*NO_OF_VALID_EVENTS);
 
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 		}	
 	}
 
-#pragma omp parallel default(none) shared(events, nrThreads, num_hwcntrs, argv, values, size, byte, filen) private(j, thId, bytexor, EventSet, i, info, retval, filename, fd, k, retRemove, retCreate, t) num_threads(nrThreads)
+#pragma omp parallel default(none) shared(nrThreads, num_hwcntrs, argv, values, size, byte, filen) private(j, thId, bytexor, EventSet, i, info, retval, filename, k, retRemove, retCreate, t) num_threads(nrThreads)
 {	
 	
     	EventSet = PAPI_NULL; 
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
 	printf("OUT OF THE PARALLEL REGION\n");
 	for (j=0; j<NO_OF_VALID_EVENTS; j++)
 	{
-		fd = fopen(argv[3], "w");
+		FILE *fd = fopen(argv[3], "w");
 		
 		for (k=0; k<size; k++)
 		{	
