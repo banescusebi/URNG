@@ -32,18 +32,13 @@
 #include <stdlib.h>
 #include <math.h>
 #include <papi.h>
-#include <pthread.h>
 #include <omp.h>
  
 #define NO_OF_THREADS 10
 #define NO_OF_EVENTS 107
 #define NO_OF_VALID_EVENTS 1
 
-int STEPS=3000; 
-
 long_long values[NO_OF_EVENTS];
-long_long value;
-long_long oldval[NO_OF_EVENTS];
 
 void handle_error(int retval)
 {
@@ -52,7 +47,20 @@ void handle_error(int retval)
 
 int main(int argc, char *argv[])
 {	
-	int retval;
+	/* Variable declaration */
+	char ***filen;
+	char *filename;
+	char thId[2];
+	unsigned char ***byte;
+	unsigned char bytexor;
+	int EventSet;
+	int num_hwcntrs;
+	int nrThreads;
+	int size; 
+	int i, j, k, t;
+	int retval, retRemove, retCreate;
+	PAPI_event_info_t info;
+	
 	/* Initialize the library */
 	retval = PAPI_library_init(PAPI_VER_CURRENT);
 	
@@ -70,8 +78,6 @@ int main(int argc, char *argv[])
 	if (retval != PAPI_LOW_LEVEL_INITED)
 		handle_error(retval);
 	
-	int num_hwcntrs;
-	
 	/*  The installation does not support PAPI */
 	if ((num_hwcntrs = PAPI_num_counters()) < 0 )
 		handle_error(1);
@@ -82,21 +88,15 @@ int main(int argc, char *argv[])
 
 	printf("The number of counters is %d\n", num_hwcntrs);
 	
-	/* Variable declarations and initialization */
-    	int EventSet = PAPI_NULL, j, retRemove, retCreate;
-	num_hwcntrs = 2;
-	PAPI_multiplex_init();
-	int i=PAPI_L1_DCM, k, t;
-	PAPI_event_info_t info;
-	int size = atoi(argv[1]);
-	int nrThreads = atoi(argv[2]);
-	unsigned char bytexor;
-	char *filename;
-	char thId[2];
-	unsigned char ***byte = malloc(sizeof(unsigned char**)*NO_OF_EVENTS); 
-	char ***filen = malloc(sizeof(char**)*NO_OF_VALID_EVENTS);
+	/* Variable initialization */
+    	num_hwcntrs = 2;
+	size = atoi(argv[1]);
+	nrThreads = atoi(argv[2]);
+	byte = malloc(sizeof(unsigned char**)*NO_OF_EVENTS); 
+	filen = malloc(sizeof(char**)*NO_OF_VALID_EVENTS);
 
-	/* */
+	PAPI_multiplex_init();
+	/* Multi-dimensional array memory allocation */
 	for (j=0; j<NO_OF_VALID_EVENTS; j++)
 	{
 		filen[j] = malloc(sizeof(char*)*nrThreads); 
@@ -115,8 +115,6 @@ int main(int argc, char *argv[])
 {	
 	
     	EventSet = PAPI_NULL; 
-	/* Scan for all supported native events on this platform */
-	printf("Name\t\t\t       Code\t   Description\n");
 	
 	#pragma omp for
 	for (t=0; t<nrThreads; t++)
@@ -130,7 +128,7 @@ int main(int argc, char *argv[])
 		else if (retCreate != PAPI_OK)
 			printf("Error creating EventSet\n");
         
-     		i=atoi(argv[4]);
+     		i=atoi(argv[4]) + 0x80000000;
 	 	
 	  	retval = PAPI_get_event_info(i, &info);
 	  	
@@ -198,6 +196,7 @@ int main(int argc, char *argv[])
 }// end pragma parallel
 
 	printf("OUT OF THE PARALLEL REGION\n");
+	/* Write bytes in output file */
 	for (j=0; j<NO_OF_VALID_EVENTS; j++)
 	{
 		FILE *fd = fopen(argv[3], "w");
